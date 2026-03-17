@@ -1,0 +1,193 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class Appointment {
+private:
+	string clientName;  // имя клиента
+	string service;  // тип услуги
+	double cost;  // стоимость услуги
+	string status;  // статус 
+public:
+	// конструктор с параметрами
+	Appointment(string name, string typeService, double costService, string statusService)
+	{
+		clientName = name;
+		service = typeService;
+		if (costService >= 0)
+		{
+			cost = costService;
+		}
+		else
+		{
+			cost = 0;
+			cout << "Стоимость услуги не может быть отрицательной" << endl;
+		}
+		if (statusService == "Ожидание" || statusService == "В процессе" || statusService == "Завершена")
+		{
+			status = statusService;
+		}
+		else
+		{
+			status = "Ожидание";
+			cout << "Некорректный статус" << endl;
+		}
+	}
+
+	// конструктор по умолчанию
+	Appointment()
+	{
+		clientName = "Не указано";
+		service = "Не указана";
+		cost = 0.0;
+		status = "Ожидание";
+	}
+
+	// деструктор
+	~Appointment()
+	{
+		cout << "Запись для клиента " << clientName << " удалена" << endl;
+	}
+
+	// Getters 
+	string getclientName()
+	{
+		return clientName;
+	}
+	string getservice()
+	{
+		return service;
+	}
+	double getcost()
+	{
+		return cost;
+	}
+	string getstatus()
+	{
+		return status;
+	}
+
+	// Setters
+	void setclientName(string new_name)
+	{
+		clientName = new_name;
+	}
+
+	void setservice(string new_service)
+	{
+		if (!new_service.empty())
+		{
+			service = new_service;
+		}
+		else
+		{
+			cout << "Название услуги не может быть пустым" << endl;
+		}
+	}
+
+	void setcost(double new_cost)
+	{
+		if (new_cost >= 0)
+		{
+			cost = new_cost;
+		}
+		else
+		{
+			cout << "Стоимость не может быть отрицательной" << endl;
+		}
+	}
+
+	void setstatus(string new_status)
+	{
+		if (new_status == "Ожидание" || new_status == "В процессе" || new_status == "Завершена")
+		{
+			status = new_status;
+		}
+		else
+		{
+			cout << "Некорректный статус" << endl;
+		}
+	}
+
+	// метод смена статуса последовательно
+	void nextStatus()
+	{
+		if (status == "Ожидание")
+		{
+			status = "В процессе";
+			cout << "Статус изменен на: " << status << endl;
+		}
+		else if (status == "В процессе")
+		{
+			status = "Завершена";
+			cout << "Статус изменен на: " << status << endl;
+		}
+		else if (status == "Завершена")
+		{
+			cout << "Запись уже завершена" << endl;
+		}
+		else
+		{
+			cout << "Некорректный статус" << endl;
+		}
+	}
+
+	// расчет стоимости с учетом чаевых
+	double totalcost(int percenttip)
+	{
+		if (percenttip < 0)
+		{
+			cout << "Процент чаевых не может быть отрицательным" << endl;
+			percenttip = 0;
+		}
+		return cost * (1 + percenttip / 100.0);
+	}
+	void PrintInfo()
+	{
+		cout << "Имя клиента: " << clientName << endl;
+		cout << "Тип услуги: " << service << endl;
+		cout << "Стоимость: " << cost << " рублей" << endl;
+		cout << "Статус: " << status << endl;
+	}
+};
+
+
+int main()
+{
+	setlocale(LC_ALL, "RUS");
+
+	// создание конструктора по умолчанию
+	cout << "--- Клиент 1 ---" << endl;
+	Appointment client1;
+	client1.PrintInfo();
+
+	cout << "\n" << endl;
+
+	// установка данных через setters для client1
+	client1.setclientName("Александр");
+	client1.setservice("Стрижка");
+	client1.setcost(1000.0);
+	client1.setstatus("Ожидание");
+	client1.PrintInfo();
+
+
+	//методы для client1
+	client1.nextStatus();
+	cout << "Стоимость услуги с чаевыми 20%: " << client1.totalcost(20) << " рублей " << endl;
+
+	cout << "\n" << endl;
+
+	// создание конструктора с параметрами 
+	cout << "--- Клиент 2 ---" << endl;
+	Appointment client2("Полина", "Окрашивание", 10000, "Ожидание");
+	client2.PrintInfo();
+
+	//методы для client2
+	client2.nextStatus();
+	cout << "Стоимость услуги с чаевыми 15%: " << client2.totalcost(15) << " рублей " << endl;
+
+	cout << "\n" << endl;
+
+	return 0;
+}
