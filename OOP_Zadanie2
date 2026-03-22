@@ -1,0 +1,324 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// Базовый класс Appointment (запись в парикмахерскую) 
+class Appointment {
+protected:
+	string clientName;  // имя клиента
+	string service;  // тип услуги
+	double cost;  // стоимость услуги
+	string status;  // статус
+
+public:
+	// конструктор с параметрами
+	Appointment(string name, string typeService, double costService, string statusService) {
+		clientName = name;
+		service = typeService;
+		if (costService >= 0) {
+			cost = costService;
+		}
+		else {
+			cost = 0;
+			cout << "Стоимость услуги не может быть отрицательной. Установлена 0." << endl;
+		}
+		if (statusService == "Ожидание" || statusService == "В процессе" || statusService == "Завершена") {
+			status = statusService;
+		}
+		else {
+			status = "Ожидание";
+			cout << "Некорректный статус" << endl;
+		}
+	}
+
+	// виртуальный деструктор 
+	virtual ~Appointment() {
+		cout << "Запись для клиента " << clientName << " удалена" << endl;
+	}
+
+	// геттеры
+	string getclientName() {
+		return clientName;
+	}
+	string getservice() {
+		return service;
+	}
+	double getcost() {
+		return cost;
+	}
+	string getstatus() {
+		return status;
+	}
+	
+	// метод смена статуса последовательно - общий для всех потомков
+	void nextStatus()
+	{
+		if (status == "Ожидание")
+		{
+			status = "В процессе";
+			cout << "Статус изменен на: " << status << endl;
+		}
+		else if (status == "В процессе")
+		{
+			status = "Завершена";
+			cout << "Статус изменен на: " << status << endl;
+		}
+		else if (status == "Завершена")
+		{
+			cout << "Запись уже завершена" << endl;
+		}
+		else
+		{
+			cout << "Некорректный статус" << endl;
+		}
+	}
+
+	// чисто виртуальные методы
+	virtual double calcServiceCost() = 0;  // расчет стоимости услуги
+	virtual int getEstimatedDuration() = 0;  // оценка длительности услуги в минутах
+
+	// виртуальный метод вывода информации
+	virtual void printInfo() {
+		cout << "==================================" << endl;
+		cout << "Имя клиента: " << clientName << endl;
+		cout << "Тип услуги: " << service << endl;
+		cout << "Стоимость: " << cost << endl;
+		cout << "Статус: " << status << endl;
+	}
+};
+
+// Производный класс: Стрижка (HaircutAppointment)
+class HaircutAppointment : public Appointment {
+private: 
+	string haircutType;  // тип стрижки (мужская/женская/детская) 
+	int hairLength;  // длина волос (см)
+public:
+	HaircutAppointment(string name, string typeService, double costService, string statusService, string typehaircut,int lengthhair) : Appointment(name, typeService, costService, statusService) {
+		if (typehaircut == "Мужская" || typehaircut == "Женская" || typehaircut == "Детская") {
+			haircutType = typehaircut;
+		}
+		else {
+			haircutType = "Мужская";
+			cout << "Некорректный тип стрижки. Установлен 'Мужская'. " << endl;
+		}
+		if (lengthhair >=0) {
+			hairLength = lengthhair;
+		}
+		else {
+			hairLength = 0;
+			cout << "Некорректная длина волос. Установлена 0 см." << endl;
+		}
+	}
+
+	// метод расчета стоимости по типу стрижки и длине волос
+	double calcServiceCost() override {
+		double finalCost = cost;
+
+		// наценка за тип стрижки
+		if (haircutType == "Женская") {
+			finalCost += 500;  // женская стрижка дороже мужской на 500 рублей
+		}
+		else if (haircutType == "Детская") {
+			finalCost -= 200;  // детская стрижка дешевле мужской на 200 рублей
+			if (finalCost < 0) finalCost = 0;
+		}
+		// мужская стрижка без изменений стоимости 
+
+		// наценка за длину волос
+		if (hairLength > 50) {
+			finalCost += 700;  // очень длинные волосы
+		}
+		else if (hairLength > 30) {
+			finalCost += 500;  // длинные волосы
+		}
+		else if (hairLength > 15) {
+			finalCost += 300;  // средние волосы
+		}
+		// если волосы меньше 15 см, то стоимость без наценки
+
+		return finalCost;
+	}
+
+	// метод оценки длительности стрижки
+	int getEstimatedDuration() override {
+		int duration = 30;  // базовая длительность 30 минут
+
+		// добавление времени по типу стрижки
+		if (haircutType == "Женская") {
+			duration += 25;     // женская стрижка дольше на 25 минут
+		}
+		else if (haircutType == "Детская") {
+			duration -= 10;     // детская стрижка быстрее на 10 минут
+			if (duration < 15) duration = 15;
+		}
+
+		// добавление времени в зависимости от длины волос
+		if (hairLength > 50) {
+			duration += 25;
+		}
+		else if (hairLength > 30) {
+			duration += 15;
+		}
+		else if (hairLength > 15) {
+			duration += 10;
+		}
+
+		return duration;
+	}
+
+	void printInfo() override {
+		Appointment::printInfo();  // вызов метода базового класса
+		cout << "Тип стрижки: " << haircutType << endl;
+		cout << "Длина волос: " << hairLength << " см" << endl;
+		cout << "Итоговая стоимость: " << calcServiceCost() << " рублей" << endl;
+		cout << "Длительность: " << getEstimatedDuration() << " минут" << endl;
+		cout << "==================================" << endl;
+	}
+};
+
+// Производный класс: Окрашивание (ColoringAppointment)
+class ColoringAppointment : public Appointment {
+private:
+	string coloringType;   // тип окрашивания (полное/мелирование/тонирование)
+	string colorbrand;     // марка краски
+	double consumption;    // расход краски (в мл)
+public:
+	ColoringAppointment(string name, string typeService, double costService, string statusService,string coloring, string brand, double colorconsumption): Appointment(name, typeService, costService, statusService) {
+		if (coloring == "Полное" || coloring == "Мелирование" || coloring == "Тонирование") {
+			coloringType = coloring;
+		}
+		else {
+			coloringType = "Полное";
+			cout << "Некорректный тип окрашивания. Установлен 'Полное'." << endl;
+		}
+
+		if (!brand.empty()) {
+			colorbrand = brand;
+		}
+		else {
+			colorbrand = "Стандарт";
+			cout << "Марка краски не указана. Установлена 'Стандарт'." << endl;
+		}
+
+		if (colorconsumption > 0) {
+			consumption = colorconsumption;
+		}
+		else {
+			consumption = 50;
+			cout << "Введено некорректное значение расхода краски. Установлено 50 мл. " << endl;
+		}
+	}
+
+	// метод расчета стоимости окрашивания
+	double calcServiceCost() override {
+		double finalCost = cost;
+
+		// наценка по типу окрашивания
+		if (coloringType == "Полное") {
+			finalCost += 3000;
+		}
+		else if (coloringType == "Мелирование") {
+			finalCost += 2000;
+		}
+		else if (coloringType == "Тонирование") {
+			finalCost += 1000;
+		}
+
+		// наценка за хорошую краску
+		if (colorbrand == "LOreal" || colorbrand == "Schwarzkopf") {
+			finalCost += 1000;
+		}
+		else if (colorbrand == "Matrix") {
+			finalCost += 500;
+		}
+
+		// наценка за расход краски (норма - 50 мл)
+		if (consumption > 50) {
+			int extracolor = (consumption - 50) / 10;  // порция краски - 10мл
+			finalCost += extracolor * 500;  // каждая лишняя порция краски - 500 рублей
+			cout << "Доплата за дополнительный расход краски: " << extracolor * 500 << " рублей." << endl;
+		}
+		// экономия краски
+		else if (consumption > 0 && consumption < 50) {
+			int savedcolor = (50 - consumption) / 10;  // сколько порций сэкономили
+			finalCost -= savedcolor * 350;
+			if (finalCost < 0) finalCost = 0;
+			cout << "Скидка за экономный расход краски составила " << savedcolor * 350 << " рублей." << endl;
+		}
+
+		return finalCost;
+	}
+
+	// метод оценки длительности окрашивания
+	int getEstimatedDuration() override {
+		int duration = 60;  // базовая длительность 60 минут
+
+		// добавление времени в зависимости от типа окрашивания
+		if (coloringType == "Полное") {
+			duration += 90;
+		}
+		else if (coloringType == "Мелирование") {
+			duration += 60;
+		}
+		else if (coloringType == "Тонирование") {
+			duration += 30;
+		}
+
+		// дополнительное время на нанесение краски (каждые 30 мл краски +15 минут)
+		if (consumption > 50) {
+			int extraTime = ((consumption - 50) / 30) * 15;
+			duration += extraTime;
+		}
+
+		return duration;
+	}
+
+	void printInfo()	override {
+			Appointment::printInfo();  // вызов метода базового класса
+			cout << "Тип окрашивания: " << coloringType << endl;
+			cout << "Марка краски: " << colorbrand << endl;
+			cout << "Расход краски: " << consumption << " мл" << endl;
+			cout << "Итоговая стоимость: " << calcServiceCost() << " рубле." << endl;
+			cout << "Длительность: " << getEstimatedDuration() << " минут" << endl;
+			cout << "==================================" << endl;
+		};
+
+		// геттеры для дополнительных полей
+		string getColoringType() {
+			return coloringType;
+		}
+		string getColorBrand() {
+			return colorbrand;
+		}
+		double getDyeConsumption() {
+			return consumption;
+		}
+	};
+
+	// ФУнкция main: демонстрация полиморфизма
+	int main()
+	{
+		setlocale(LC_ALL, "RU");
+		const int N = 5;
+		Appointment* app[N];
+
+		//создаем объекты разных типов через указатели на базовый класс
+		app[0] = new HaircutAppointment("Валерий", "Стрижка", 1000, "Ожидание", "Мужская", 10);
+		app[1] = new ColoringAppointment("Милана", "Окрашивание", 6000, "Ожидание", "Мелирование", "Matrix", 40);
+		app[2] = new HaircutAppointment("Ольга", "Стрижка", 2500, "В процессе", "Женская", 35);
+		app[3] = new HaircutAppointment("Дмитрий", "Стрижка", 800, "Завершена", "Детская", 6);
+		app[4] = new ColoringAppointment("Анна", "Окрашивание", 4000, "Ожидание", "Тонирование", "LOreal", 30);
+
+		cout << "=== ИНФОРМАЦИЯ О ВСЕХ ЗАПИСЯХ ===" << endl;
+		for (int i = 0; i < N; i++) {
+			app[i]->printInfo();
+			cout << endl;
+		}
+
+		// освобождение памяти
+		for (int i = 0; i < N; i++) {
+			delete app[i];
+		}
+		return 0;
+	};
